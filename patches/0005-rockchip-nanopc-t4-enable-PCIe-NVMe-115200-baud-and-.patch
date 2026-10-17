@@ -1,0 +1,138 @@
+From 1ffdd5f1cb5ca7bf21017294b457bfdbca3db8ba Mon Sep 17 00:00:00 2001
+From: dsh <dsh@localhost>
+Date: Sat, 17 Oct 2026 23:43:39 +0800
+Subject: [PATCH 5/5] rockchip: nanopc-t4: enable PCIe/NVMe, 115200 baud and
+ boot fan
+
+Enable the RK3399 PCIe host driver, the PCIe PHY driver, NVMe and the
+nvme command explicitly, and enumerate PCI buses during init so the NVMe
+namespace is available to bootstd and to the nvme command.
+
+Use 115200 baud for the console and debug UART instead of 1500000.
+
+Run the onboard fan at full speed during boot: PWM1 (GPIO4_C6) drives
+the 12 V fan rail, so preboot configures a 20 kHz period with 100% duty
+and enables the channel.  PCLK_RKPWM_PMU must be ungated for the PWM
+registers to work, so add enable/disable for that RK3399 PMU gate and
+enable the clock from the Rockchip PWM probe.
+---
+ configs/nanopc-t4-rk3399_defconfig |  9 ++++++++-
+ drivers/clk/rockchip/clk_rk3399.c  | 32 ++++++++++++++++++++++++++++++
+ drivers/pwm/rk_pwm.c               | 11 ++++++++++
+ 3 files changed, 51 insertions(+), 1 deletion(-)
+
+diff --git a/configs/nanopc-t4-rk3399_defconfig b/configs/nanopc-t4-rk3399_defconfig
+index f8ae436a..a187a8b5 100644
+--- a/configs/nanopc-t4-rk3399_defconfig
++++ b/configs/nanopc-t4-rk3399_defconfig
+@@ -14,6 +14,8 @@ CONFIG_SYS_LOAD_ADDR=0x800800
+ CONFIG_DEBUG_UART_BASE=0xFF1A0000
+ CONFIG_DEBUG_UART_CLOCK=24000000
+ CONFIG_PCI=y
++CONFIG_PCIE_ROCKCHIP=y
++CONFIG_PCI_INIT_R=y
+ CONFIG_DEBUG_UART=y
+ CONFIG_DEFAULT_FDT_FILE="rockchip/rk3399-nanopc-t4.dtb"
+ CONFIG_DISPLAY_BOARDINFO_LATE=y
+@@ -27,9 +29,12 @@ CONFIG_CMD_BOOTZ=y
+ CONFIG_CMD_GPT=y
+ CONFIG_CMD_MMC=y
+ CONFIG_CMD_PCI=y
++CONFIG_CMD_PWM=y
+ CONFIG_CMD_USB=y
+ # CONFIG_CMD_SETEXPR is not set
+ CONFIG_CMD_TIME=y
++CONFIG_USE_PREBOOT=y
++CONFIG_PREBOOT="pwm config 1 0 50000 50000; pwm enable 1 0"
+ CONFIG_SPL_OF_CONTROL=y
+ CONFIG_OF_SPL_REMOVE_PROPS="clock-names interrupt-parent assigned-clocks assigned-clock-rates assigned-clock-parents"
+ CONFIG_ENV_IS_IN_MMC=y
+@@ -47,6 +52,8 @@ CONFIG_ETH_DESIGNWARE=y
+ CONFIG_GMAC_ROCKCHIP=y
+ CONFIG_PHY_REALTEK=y
+ CONFIG_NVME_PCI=y
++CONFIG_CMD_NVME=y
++CONFIG_PHY_ROCKCHIP_PCIE=y
+ CONFIG_PHY_ROCKCHIP_INNO_USB2=y
+ CONFIG_PHY_ROCKCHIP_TYPEC=y
+ CONFIG_PMIC_RK8XX=y
+@@ -56,7 +63,7 @@ CONFIG_SPL_DM_REGULATOR_FIXED=y
+ CONFIG_REGULATOR_RK8XX=y
+ CONFIG_SPL_REGULATOR_RK8XX=y
+ CONFIG_PWM_ROCKCHIP=y
+-CONFIG_BAUDRATE=1500000
++CONFIG_BAUDRATE=115200
+ CONFIG_DEBUG_UART_SHIFT=2
+ CONFIG_SYS_NS16550_MEM32=y
+ CONFIG_SYSRESET=y
+diff --git a/drivers/clk/rockchip/clk_rk3399.c b/drivers/clk/rockchip/clk_rk3399.c
+index 5957623a..2c487529 100644
+--- a/drivers/clk/rockchip/clk_rk3399.c
++++ b/drivers/clk/rockchip/clk_rk3399.c
+@@ -1667,9 +1667,41 @@ static ulong rk3399_pmuclk_set_rate(struct clk *clk, ulong rate)
+ 	return ret;
+ }
+ 
++static int rk3399_pmuclk_enable(struct clk *clk)
++{
++	struct rk3399_pmuclk_priv *priv = dev_get_priv(clk->dev);
++
++	switch (clk->id) {
++	case PCLK_RKPWM_PMU:
++		rk_clrreg(&priv->pmucru->pmucru_clkgate_con[1], BIT(10));
++		break;
++	default:
++		return -ENOENT;
++	}
++
++	return 0;
++}
++
++static int rk3399_pmuclk_disable(struct clk *clk)
++{
++	struct rk3399_pmuclk_priv *priv = dev_get_priv(clk->dev);
++
++	switch (clk->id) {
++	case PCLK_RKPWM_PMU:
++		rk_setreg(&priv->pmucru->pmucru_clkgate_con[1], BIT(10));
++		break;
++	default:
++		return -ENOENT;
++	}
++
++	return 0;
++}
++
+ static struct clk_ops rk3399_pmuclk_ops = {
+ 	.get_rate = rk3399_pmuclk_get_rate,
+ 	.set_rate = rk3399_pmuclk_set_rate,
++	.enable = rk3399_pmuclk_enable,
++	.disable = rk3399_pmuclk_disable,
+ };
+ 
+ #ifndef CONFIG_XPL_BUILD
+diff --git a/drivers/pwm/rk_pwm.c b/drivers/pwm/rk_pwm.c
+index b51dee31..ca4ca37a 100644
+--- a/drivers/pwm/rk_pwm.c
++++ b/drivers/pwm/rk_pwm.c
+@@ -142,6 +142,17 @@ static int rk_pwm_probe(struct udevice *dev)
+ 	priv->freq = clk_get_rate(&clk);
+ 	priv->data = (struct rockchip_pwm_data *)dev_get_driver_data(dev);
+ 
++	/*
++	 * The PWM needs its PCLK enabled before the registers are usable
++	 * (e.g. PCLK_RKPWM_PMU on RK3399).  Ignore -ENOSYS for clock
++	 * drivers that do not implement enable.
++	 */
++	ret = clk_enable(&clk);
++	if (ret && ret != -ENOSYS) {
++		debug("%s enable clock fail!\n", __func__);
++		return ret;
++	}
++
+ 	if (priv->data->supports_polarity)
+ 		priv->conf_polarity = PWM_DUTY_POSTIVE | PWM_INACTIVE_NEGATIVE;
+ 
+-- 
+2.53.0
+

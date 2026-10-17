@@ -1,0 +1,33 @@
+From db7fb31f87fe9789355420f9208b7ff93414df8d Mon Sep 17 00:00:00 2001
+From: dsh <dsh@localhost>
+Date: Sat, 17 Oct 2026 23:43:39 +0800
+Subject: [PATCH 4/5] rk3399: evb: boot SD first, then NVMe
+
+U-Boot is installed in eMMC, while the OS normally lives on SD or NVMe.
+Set the default boot target list to "mmc1 nvme": SD card (mmc1) first,
+NVMe second, and do not try to boot an OS from eMMC (mmc0).
+---
+ include/configs/evb_rk3399.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/include/configs/evb_rk3399.h b/include/configs/evb_rk3399.h
+index 70ab5877..f74c948e 100644
+--- a/include/configs/evb_rk3399.h
++++ b/include/configs/evb_rk3399.h
+@@ -11,6 +11,13 @@
+ 		"stdout=serial,vidconsole\0" \
+ 		"stderr=serial,vidconsole\0"
+ 
++/*
++ * NanoPC-T4: U-Boot itself is installed in eMMC, the OS lives on SD or
++ * NVMe.  Scan the SD card first (mmc1 = sdhci@fe320000), then NVMe.
++ * eMMC (mmc0) is deliberately not a boot target.
++ */
++#define BOOT_TARGETS	"mmc1 nvme"
++
+ #include <configs/rk3399_common.h>
+ 
+ #endif
+-- 
+2.53.0
+

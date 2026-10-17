@@ -1,0 +1,37 @@
+From abf4fb1b0f64cc828a6f1d888448e0aca01c3d21 Mon Sep 17 00:00:00 2001
+From: dsh <dsh@localhost>
+Date: Sat, 17 Oct 2026 23:43:39 +0800
+Subject: [PATCH 3/5] arm: dts: rk3399-nanopc-t4: enable PCIe for NVMe boot
+
+Enable the RK3399 PCIe root complex and its PHY in the U-Boot device
+tree.  The M.2 Key-M slot uses the always-on 3.3V rail, GPIO2_A4 as
+PERST# (ep-gpios) and the 100 MHz SCLK_PCIEPHY_REF100M reference clock
+from rk3399-nanopi4.dtsi.
+---
+ arch/arm/dts/rk3399-nanopc-t4-u-boot.dtsi | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm/dts/rk3399-nanopc-t4-u-boot.dtsi b/arch/arm/dts/rk3399-nanopc-t4-u-boot.dtsi
+index 17201bcf..98839a17 100644
+--- a/arch/arm/dts/rk3399-nanopc-t4-u-boot.dtsi
++++ b/arch/arm/dts/rk3399-nanopc-t4-u-boot.dtsi
+@@ -5,3 +5,16 @@
+ 
+ #include "rk3399-nanopi4-u-boot.dtsi"
+ #include "rk3399-sdram-lpddr3-samsung-4GB-1866.dtsi"
++
++/*
++ * M.2 Key-M slot on the NanoPC-T4.  The 3.3V rail is always on, PERST#
++ * is GPIO2_A4 (ep-gpios) and the PHY reference clock is the 100 MHz
++ * SCLK_PCIEPHY_REF100M parent described in rk3399-nanopi4.dtsi.
++ */
++&pcie0 {
++	status = "okay";
++};
++
++&pcie_phy {
++	status = "okay";
++};
+-- 
+2.53.0
+
