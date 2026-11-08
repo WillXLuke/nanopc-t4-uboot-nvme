@@ -1,7 +1,7 @@
 From e6cbb583afb94b64fe56164f546523dc57d7fcec Mon Sep 17 00:00:00 2001
 From: dsh <dsh@localhost>
 Date: Sat, 17 Oct 2026 23:43:39 +0800
-Subject: [PATCH 2/5] pci: rockchip: wait after link training before config
+Subject: [PATCH 2/6] pci: rockchip: wait after link training before config
  access
 
 Some NVMe SSDs (and other endpoints) answer the first config-space read

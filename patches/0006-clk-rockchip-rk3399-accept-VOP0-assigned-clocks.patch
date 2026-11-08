@@ -1,0 +1,46 @@
+From 38adcf93dc26eb266f06137788b8269d40e57f89 Mon Sep 17 00:00:00 2001
+From: dsh <dsh@localhost>
+Date: Sun, 8 Nov 2026 16:44:50 +0800
+Subject: [PATCH 6/6] clk: rockchip: rk3399: accept VOP0 assigned clocks
+
+device_probe() applies assigned-clocks through clk_set_defaults() and
+fails the probe when a rate cannot be set.  vopb lists ACLK_VOP0 and
+HCLK_VOP0, but rk3399_clk_set_rate() only accepted the VOP1 variants,
+so vopb never probed and HDMI had no output.
+
+Handle the VOP0 aclk/hclk like VOP1: accept the requested rates and
+keep the reset-default divider values.  vopl already worked because its
+clocks were in the same list.
+---
+ drivers/clk/rockchip/clk_rk3399.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/rockchip/clk_rk3399.c b/drivers/clk/rockchip/clk_rk3399.c
+index 2c487529..f6f8ca9b 100644
+--- a/drivers/clk/rockchip/clk_rk3399.c
++++ b/drivers/clk/rockchip/clk_rk3399.c
+@@ -1079,14 +1079,19 @@ static ulong rk3399_clk_set_rate(struct clk *clk, ulong rate)
+ 	case DCLK_VOP1:
+ 		ret = rk3399_vop_set_clk(priv->cru, clk->id, rate);
+ 		break;
++	case ACLK_VOP0:
++	case HCLK_VOP0:
+ 	case ACLK_VOP1:
+ 	case HCLK_VOP1:
+ 	case HCLK_SD:
+ 	case SCLK_UPHY0_TCPDCORE:
+ 	case SCLK_UPHY1_TCPDCORE:
+ 		/**
+-		 * assigned-clocks handling won't require for vopl, so
+-		 * return 0 to satisfy clk_set_defaults during device probe.
++		 * vopb/vopl carry assigned-clocks for their aclk/hclk.
++		 * device_probe() applies them via clk_set_defaults() and
++		 * aborts the probe on an unsupported rate, so accept the
++		 * request and keep the reset-default rates.  Without this
++		 * vopb never probes and HDMI has no output.
+ 		 */
+ 		return 0;
+ 	case SCLK_DDRC:
+-- 
+2.53.0
+

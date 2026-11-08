@@ -5,6 +5,7 @@ Mainline U-Boot **v2026.07** built for the NanoPC-T4, with:
 * working RK3399 PCIe root complex and PCIe PHY (so NVMe is usable in U-Boot),
 * default boot order **SD card first, NVMe second** (eMMC is not a boot target),
 * onboard **fan at full speed during boot** (PWM1, 100% duty),
+* **HDMI output fixed** (VOP0 assigned-clock handling),
 * U-Boot installed in **eMMC** (TPL/SPL + U-Boot proper + BL31), so the board
   boots without any SD card and then finds the OS on SD or NVMe.
 
@@ -96,6 +97,19 @@ console/debug UART to `CONFIG_BAUDRATE=115200` (instead of 1500000).
 It also enables `CONFIG_CMD_PWM`, adds the full-speed fan `preboot` command,
 ungates `PCLK_RKPWM_PMU` in the RK3399 PMU clock driver and enables the PWM
 clock from the Rockchip PWM probe. See "Fan at full speed during boot" below.
+
+### 6. HDMI / VOP clocks (`0006`)
+
+`device_probe()` applies a device's `assigned-clocks` through
+`clk_set_defaults()` and aborts the probe if a rate cannot be set. `vopb`
+lists `ACLK_VOP0`/`HCLK_VOP0` in its assigned clocks, but
+`rk3399_clk_set_rate()` only accepted the VOP1 variants, so **vopb never
+probed and HDMI had no output**.
+
+The RK3399 clock driver now accepts the VOP0 aclk/hclk like VOP1 and keeps
+the reset-default divider values, which is what the VOP driver needs before
+it sets `dclk_vop` to the pixel clock. This restores the HDMI display and
+also lets Linux start from a clean VOP/HDMI state.
 
 ## Install U-Boot into eMMC
 
@@ -230,7 +244,7 @@ saveenv
 ./build-uboot.sh
 ```
 
-The script clones U-Boot `v2026.07`, applies `patches/0001..0005`, builds with
+The script clones U-Boot `v2026.07`, applies `patches/0001..0006`, builds with
 `CROSS_COMPILE=aarch64-linux-gnu-` and copies the artifacts to the repository
 root.
 

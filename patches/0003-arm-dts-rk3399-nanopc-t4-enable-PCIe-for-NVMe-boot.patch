@@ -1,7 +1,7 @@
 From abf4fb1b0f64cc828a6f1d888448e0aca01c3d21 Mon Sep 17 00:00:00 2001
 From: dsh <dsh@localhost>
 Date: Sat, 17 Oct 2026 23:43:39 +0800
-Subject: [PATCH 3/5] arm: dts: rk3399-nanopc-t4: enable PCIe for NVMe boot
+Subject: [PATCH 3/6] arm: dts: rk3399-nanopc-t4: enable PCIe for NVMe boot
 
 Enable the RK3399 PCIe root complex and its PHY in the U-Boot device
 tree.  The M.2 Key-M slot uses the always-on 3.3V rail, GPIO2_A4 as

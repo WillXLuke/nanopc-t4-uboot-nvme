@@ -1,7 +1,7 @@
 From db7fb31f87fe9789355420f9208b7ff93414df8d Mon Sep 17 00:00:00 2001
 From: dsh <dsh@localhost>
 Date: Sat, 17 Oct 2026 23:43:39 +0800
-Subject: [PATCH 4/5] rk3399: evb: boot SD first, then NVMe
+Subject: [PATCH 4/6] rk3399: evb: boot SD first, then NVMe
 
 U-Boot is installed in eMMC, while the OS normally lives on SD or NVMe.
 Set the default boot target list to "mmc1 nvme": SD card (mmc1) first,

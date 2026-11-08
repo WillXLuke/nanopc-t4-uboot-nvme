@@ -1,7 +1,7 @@
 From 1ffdd5f1cb5ca7bf21017294b457bfdbca3db8ba Mon Sep 17 00:00:00 2001
 From: dsh <dsh@localhost>
 Date: Sat, 17 Oct 2026 23:43:39 +0800
-Subject: [PATCH 5/5] rockchip: nanopc-t4: enable PCIe/NVMe, 115200 baud and
+Subject: [PATCH 5/6] rockchip: nanopc-t4: enable PCIe/NVMe, 115200 baud and
  boot fan
 
 Enable the RK3399 PCIe host driver, the PCIe PHY driver, NVMe and the

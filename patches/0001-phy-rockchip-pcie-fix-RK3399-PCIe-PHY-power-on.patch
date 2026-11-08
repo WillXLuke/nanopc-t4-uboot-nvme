@@ -1,7 +1,7 @@
 From 353a7fb398815118eb78a45ec98a9b2088989d6c Mon Sep 17 00:00:00 2001
 From: dsh <dsh@localhost>
 Date: Sat, 17 Oct 2026 23:43:39 +0800
-Subject: [PATCH 1/5] phy: rockchip-pcie: fix RK3399 PCIe PHY power-on
+Subject: [PATCH 1/6] phy: rockchip-pcie: fix RK3399 PCIe PHY power-on
 
 Three problems kept the RK3399 PCIe PHY PLL from locking:
 
