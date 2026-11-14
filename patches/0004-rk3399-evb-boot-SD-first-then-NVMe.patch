@@ -1,4 +1,4 @@
-From db7fb31f87fe9789355420f9208b7ff93414df8d Mon Sep 17 00:00:00 2001
+From 30e2bc2034f771e0306d5f74ae929f1835951138 Mon Sep 17 00:00:00 2001
 From: dsh <dsh@localhost>
 Date: Sat, 17 Oct 2026 23:43:39 +0800
 Subject: [PATCH 4/6] rk3399: evb: boot SD first, then NVMe

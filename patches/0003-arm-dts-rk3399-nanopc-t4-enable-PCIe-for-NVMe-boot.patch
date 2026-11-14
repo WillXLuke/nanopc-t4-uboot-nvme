@@ -1,4 +1,4 @@
-From abf4fb1b0f64cc828a6f1d888448e0aca01c3d21 Mon Sep 17 00:00:00 2001
+From cb2607092b76e2b80edfb089e7de307320a67082 Mon Sep 17 00:00:00 2001
 From: dsh <dsh@localhost>
 Date: Sat, 17 Oct 2026 23:43:39 +0800
 Subject: [PATCH 3/6] arm: dts: rk3399-nanopc-t4: enable PCIe for NVMe boot

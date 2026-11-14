@@ -11,7 +11,7 @@ set -euo pipefail
 
 HERE=$(cd -- "$(dirname -- "$0")" && pwd)
 UBOOT_SRC=${UBOOT_SRC:-$HERE/uboot}
-UBOOT_TAG=${UBOOT_TAG:-v2026.07}
+UBOOT_TAG=${UBOOT_TAG:-v2026.10}
 BL31=${BL31:-$HERE/bl31/rk3399_bl31_v1.35.elf}
 CROSS_COMPILE=${CROSS_COMPILE:-aarch64-linux-gnu-}
 OUT=${OUT:-$HERE}

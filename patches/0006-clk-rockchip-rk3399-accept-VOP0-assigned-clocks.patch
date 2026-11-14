@@ -1,4 +1,4 @@
-From 38adcf93dc26eb266f06137788b8269d40e57f89 Mon Sep 17 00:00:00 2001
+From 333a0521a09e3d882037eb32ebfd79b78f81d79c Mon Sep 17 00:00:00 2001
 From: dsh <dsh@localhost>
 Date: Sun, 8 Nov 2026 16:44:50 +0800
 Subject: [PATCH 6/6] clk: rockchip: rk3399: accept VOP0 assigned clocks

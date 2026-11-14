@@ -1,6 +1,6 @@
 # U-Boot for FriendlyElec NanoPC-T4 (RK3399): SD → NVMe boot
 
-Mainline U-Boot **v2026.07** built for the NanoPC-T4, with:
+Mainline U-Boot **v2026.10** built for the NanoPC-T4, with:
 
 * working RK3399 PCIe root complex and PCIe PHY (so NVMe is usable in U-Boot),
 * default boot order **SD card first, NVMe second** (eMMC is not a boot target),
@@ -77,7 +77,7 @@ mmc1 nvme
 
 `mmc1` is the microSD slot (`sdmmc@fe320000`), `mmc0` is eMMC
 (`sdhci@fe330000`). U-Boot itself lives on eMMC; the OS is looked up on SD
-first and on NVMe second. U-Boot 2026.07 boots with bootstd
+first and on NVMe second. U-Boot 2026.10 boots with bootstd
 (`bootcmd=bootflow scan -lb`), which uses the `boot_targets` environment
 variable as its scan order.
 
@@ -137,7 +137,7 @@ sudo ./install-uboot-emmc.sh /dev/mmcblk0
 Expected serial output after power-on:
 
 ```
-U-Boot 2026.07...
+U-Boot 2026.10...
 Model: FriendlyElec NanoPC-T4
 ...
 PCIE-0: Link up (Bus0)
@@ -244,7 +244,7 @@ saveenv
 ./build-uboot.sh
 ```
 
-The script clones U-Boot `v2026.07`, applies `patches/0001..0006`, builds with
+The script clones U-Boot `v2026.10`, applies `patches/0001..0006`, builds with
 `CROSS_COMPILE=aarch64-linux-gnu-` and copies the artifacts to the repository
 root.
 
